@@ -2,14 +2,16 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 
+	"github.com/alecthomas/kingpin"
 	"github.com/codeskyblue/comtool"
 	"github.com/itang/gohttp"
 )
@@ -22,7 +24,7 @@ const PORT = 10351
 func init() {
 	homedir, _ := comtool.HomeDir()
 	shareFolder = filepath.Join(homedir, ".goshare")
-	println(shareFolder)
+	// println(shareFolder)
 	if !comtool.Exists(shareFolder) {
 		if err := os.Mkdir(shareFolder, 0755); err != nil {
 			log.Fatal(err)
@@ -47,32 +49,39 @@ func startFileServer() {
 
 func printLinks(name string) {
 	for _, ip := range ips {
+		if strings.Contains(ip.String(), ":") {
+			continue // skip ipv6
+		}
 		url := fmt.Sprintf("http://%s:%d/%s", ip, PORT, name)
 		fmt.Printf(comtool.Template(`{url}
-wget {url} -O "{name}"
-curl -o "{name}" {url}
+wget {url} -O {name}
+curl {url} -o {name}
 `, map[string]string{
-			"name": name,
+			"name": strconv.Quote(name),
 			"url":  url,
 		}))
 		println("-------------------------------------")
 	}
 }
 
+var (
+	sharePaths  = kingpin.Arg("file", "shared file path").Strings()
+	runAsServer = kingpin.Flag("server", "run as server").Bool()
+)
+
 func main() {
-	fserver := flag.Bool("server", false, "start file server")
-	flag.Usage = func() {
-		fmt.Println(`Usage of goshare:
-    goshare <file> : generate download links`)
+	kingpin.Parse()
+
+	if *runAsServer {
+		startFileServer()
+		return
 	}
 
-	flag.Parse()
-	if *fserver {
-		startFileServer()
+	err := exec.Command(os.Args[0], "--server").Start()
+	if err != nil {
+		log.Fatal(err)
 	}
-	err := exec.Command(os.Args[0], "-server").Start()
-	fmt.Println(err)
-	for _, name := range flag.Args() {
+	for _, name := range *sharePaths {
 		if comtool.Exists(name) {
 			fullpath, _ := filepath.Abs(name)
 			basename := filepath.Base(name)
