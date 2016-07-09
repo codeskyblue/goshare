@@ -49,7 +49,7 @@ func printLinks(name string) {
 	for _, ip := range ips {
 		url := fmt.Sprintf("http://%s:%d/%s", ip, PORT, name)
 		fmt.Printf(comtool.Template(`{url}
-wget -O "{name}" {url}
+wget {url} -O "{name}"
 curl -o "{name}" {url}
 `, map[string]string{
 			"name": name,
@@ -61,6 +61,11 @@ curl -o "{name}" {url}
 
 func main() {
 	fserver := flag.Bool("server", false, "start file server")
+	flag.Usage = func() {
+		fmt.Println(`Usage of goshare:
+    goshare <file> : generate download links`)
+	}
+
 	flag.Parse()
 	if *fserver {
 		startFileServer()
