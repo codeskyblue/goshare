@@ -1,7 +1,7 @@
-// Package main provides ...
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
 	"log"
 	"net"
@@ -14,7 +14,6 @@ import (
 	"github.com/alecthomas/kingpin"
 	"github.com/codeskyblue/comtool"
 	"github.com/itang/gohttp"
-	"github.com/kalafut/imohash"
 )
 
 var shareFolder string
@@ -71,11 +70,9 @@ var (
 )
 
 func HashFile(fullpath string) string {
-	hdata, err := imohash.SumFile(fullpath)
-	if err != nil {
-		panic(err)
-	}
-	return fmt.Sprintf("%x", hdata[8:12])
+	h := md5.New()
+	h.Write([]byte(fullpath))
+	return fmt.Sprintf("%x", h.Sum(nil)[8:12])
 }
 
 func main() {

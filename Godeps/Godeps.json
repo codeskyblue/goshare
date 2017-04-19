@@ -37,14 +37,6 @@
 			"Rev": "7a6856ae1ba6b85f03a116974d55848e32ea317c"
 		},
 		{
-			"ImportPath": "github.com/kalafut/imohash",
-			"Rev": "40431b95b02a63c1876986cd3838f6476cf5d1c2"
-		},
-		{
-			"ImportPath": "github.com/spaolacci/murmur3",
-			"Rev": "0d12bf811670bf6a1a63828dfbd003eded177fce"
-		},
-		{
 			"ImportPath": "github.com/wendal/errors",
 			"Rev": "f66c77a7882b399795a8987ebf87ef64a427417e"
 		}
