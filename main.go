@@ -14,6 +14,7 @@ import (
 	"github.com/alecthomas/kingpin"
 	"github.com/codeskyblue/comtool"
 	"github.com/itang/gohttp"
+	"github.com/kalafut/imohash"
 )
 
 var shareFolder string
@@ -47,12 +48,12 @@ func startFileServer() {
 	server.Start()
 }
 
-func printLinks(name string) {
+func printLinks(hash, name string) {
 	for _, ip := range ips {
 		if strings.Contains(ip.String(), ":") {
 			continue // skip ipv6
 		}
-		url := fmt.Sprintf("http://%s:%d/%s", ip, PORT, name)
+		url := fmt.Sprintf("http://%s:%d/%s/%s", ip, PORT, hash, name)
 		fmt.Printf(comtool.Template(`{url}
 wget {url} -O {name}
 curl {url} -o {name}
@@ -69,6 +70,14 @@ var (
 	runAsServer = kingpin.Flag("server", "run as server").Bool()
 )
 
+func HashFile(fullpath string) string {
+	hdata, err := imohash.SumFile(fullpath)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%x", hdata[8:12])
+}
+
 func main() {
 	kingpin.Parse()
 
@@ -84,13 +93,16 @@ func main() {
 	for _, name := range *sharePaths {
 		if comtool.Exists(name) {
 			fullpath, _ := filepath.Abs(name)
+			hash := HashFile(fullpath)
+
 			basename := filepath.Base(name)
-			sharepath := filepath.Join(shareFolder, basename)
+			sharepath := filepath.Join(shareFolder, hash, basename)
 			if comtool.Exists(sharepath) {
 				os.Remove(sharepath)
 			}
+			os.MkdirAll(filepath.Dir(sharepath), 0755)
 			os.Symlink(fullpath, sharepath)
-			printLinks(basename)
+			printLinks(hash, basename)
 		} else {
 			fmt.Printf("[%s] not exists\n", name)
 		}
