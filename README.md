@@ -15,6 +15,7 @@ Just one command.
 
 ```
 $ goshare some_file.txt
+http://10.240.171.86:10351/0aa04a5d/some_file.txt
 ```
 
 ## LICENSE
